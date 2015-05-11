@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <link rel="stylesheet" type="text/css" href="css/validaCPF.css" />
+        <link rel="stylesheet" type="text/css" href="plugins/bootstrap-3.3.4-dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.4.5.min.css" />
+		<title>CNPJ</title>
+	</head>
+	<body>
+		<div data-role="page" id="validaCPF" class="page">
+
+			<div data-role="header" class="titulo">
+				<button type="button" onclick="voltar();" class="btn btn-default btnVoltar">
+					<div>
+						<i class="glyphicon glyphicon-chevron-left"></i>
+					</div>
+				</button>
+				<h1>
+					Validar CNPJ
+				</h1>
+			</div>
+			<div data-role="content" class="content">
+				<form onSubmit="return valida();">
+					<div class="form-group formulario">
+						<span class="mensagem">Digite o número de CNPJ que deseja verificar abaixo</span>
+						<input type="text" id="inptCNPJ" class="form-control" placeholder="00.000.000/0000-00">
+						<div class="mensagem"></div>
+					</div>
+					<button type="button" onclick="valida();" class="btn btn-default">Consultar</button>
+				</form>
+			</div>
+
+			<div data-role="popup" id="modalMessage" class="popup" data-transition="pop">
+                <div data-role="header" class="popupHeader">                    
+                    <h1></h1>
+                </div>
+                <div data-role="content" class="popupContent">
+                    <p id="mensagem"></p>
+                    <input type="button" class="btn btn-default" onclick="fechar()" />
+                </div>
+            </div>
+
+
+		</div>
+
+		<script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/jquery-2.1.3.min.js"></script>
+        <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+        <script type="text/javascript" src="plugins/bootstrap-3.3.4-dist/js/bootstrap.min.js"></script>
+        <script type="text/javascript">
+        	var modalError = "Erro", btnFechar = "Fechar", btnOk = "OK", 
+                colorError = "#c0392b", colorOk = "#27ae60";
+
+            var x = new Array();
+            var y = 0, z = 2, res = 0, dig1 = 0, dig2 = 0;
+
+        	function valida(){
+        		var cnpj = document.getElementById("inptCNPJ").value;
+
+        		cnpj = cnpj.replace(/\D/g,"");
+
+        		if(cnpj != null && cnpj != "")
+        		{
+        			if (cnpj.length == 14)
+        			{
+        				validaCNPJ(cnpj);
+        			}
+        			else
+        			{
+        				modalMessage(modalError, "Número de CNPJ inválido.", btnFechar, colorError);
+        			}
+        		}
+        		else
+        		{
+        			modalMessage(modalError, "Informe um número de CNPJ para continuar.", btnFechar, colorError);
+        		}
+
+        		return false;
+        	}
+
+        	function validaCNPJ(cnpj){
+        		if( cnpj == "00000000000000" || cnpj == "11111111111111" ||
+        			cnpj == "22222222222222" || cnpj == "33333333333333" ||
+        			cnpj == "44444444444444" || cnpj == "55555555555555" ||
+        			cnpj == "66666666666666" || cnpj == "77777777777777" ||
+        			cnpj == "88888888888888" || cnpj == "99999999999999" )
+        		{
+        			modalMessage(modalError, "Número de CNPJ inválido.", btnFechar, colorError);
+        		}
+        		else
+        		{
+        			for (var i = 0; i < cnpj.length; i++) 
+                    {
+                        x[i] = cnpj.charAt(i);
+                    }
+
+                    dig1 = primeiroDigito(x, y, z, res);
+                    dig2 = segundoDigito(x, y, z, res);
+
+                    validaDigitos(x, dig1, dig2);
+        		}
+        	}
+
+        	function primeiroDigito(x, y, z, res){
+                for(var i = 11; i >= 0; i--)
+                {
+                	if(z > 9)
+                		z = 2;
+
+                    y += x[i] * z;
+                    z++;
+                }
+
+                res = y % 11;
+
+                if(res < 2)
+                {
+                    dig1 = 0;
+                }
+                else
+                {
+                    dig1 = 11 - res;
+                }
+
+                return dig1;
+            }
+
+            function segundoDigito(x, y, z, res){
+                
+                for(var i = 12; i >= 0; i--)
+                {
+                    if(i == 12)                
+                        y += dig1 * z;
+                    else
+                        y += x[i] * z;
+
+                    z++;
+                    
+                    if(z > 9)
+                		z = 2;
+                }
+
+                res = y % 11;
+
+                if(res < 2)
+                {
+                    dig2 = 0;
+                }
+                else
+                {
+                    dig2 = 11 - res;
+                }
+
+                return dig2;
+            }
+
+            function validaDigitos(x, y, z)
+            {
+                if( (y == x[12]) && (z == x[13]) )
+                {
+                    modalMessage("CPF válido", "O número de CNPJ informado é válido" ,btnOk, colorOk);
+                }
+                else
+                {
+                    modalMessage("CPF inválido", "O número de CNPJ informado é invalido.", btnOk, colorError);
+                }
+            }
+
+        	function modalMessage(titulo, texto, btnValue, cor){
+                $('.popupHeader').css("background-color", cor);
+                $('.popupHeader h1').html(titulo);
+                $('.popupContent input').val(btnValue);
+        		$('#mensagem').html(texto);
+        		$('#modalMessage').popup('open');                
+        	}
+
+            function voltar(){
+                window.location.href = "index.html";
+            }
+
+        	function fechar(){
+        		$('#modalMessage').popup('close');
+        	}
+        </script>
+	</body>
+</html>
